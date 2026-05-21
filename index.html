@@ -1,0 +1,227 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<title>Luxury Shop</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  font-family:Arial;
+  background:#f1f3f6;
+}
+
+/* HEADER */
+header{
+  background:#2874f0;
+  color:white;
+  padding:10px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+/* LOGO */
+header h2{
+  font-size:20px;
+}
+
+/* SEARCH BAR */
+.search-box{
+  flex:1;
+  display:flex;
+}
+
+.search-box input{
+  width:100%;
+  padding:8px;
+  border:none;
+  outline:none;
+  border-radius:2px 0 0 2px;
+}
+
+.search-box button{
+  background:#ffe500;
+  border:none;
+  padding:8px 15px;
+  cursor:pointer;
+}
+
+/* CART */
+.cart{
+  cursor:pointer;
+  font-size:14px;
+}
+
+/* PRODUCTS GRID */
+.products{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:15px;
+  padding:15px;
+}
+
+/* CARD */
+.card{
+  background:white;
+  border-radius:5px;
+  overflow:hidden;
+  transition:0.2s;
+  border:1px solid #ddd;
+}
+
+.card:hover{
+  box-shadow:0 2px 10px rgba(0,0,0,0.15);
+}
+
+/* IMAGE FIX (IMPORTANT) */
+.card img{
+  width:100%;
+  height:220px;
+  object-fit:contain;
+  background:white;
+  padding:10px;
+}
+
+/* CONTENT */
+.card h3{
+  font-size:14px;
+  padding:5px 10px;
+  height:40px;
+  overflow:hidden;
+}
+
+.card p{
+  color:#388e3c;
+  font-weight:bold;
+  padding:0 10px;
+}
+
+/* BUTTON */
+button{
+  background:#fb641b;
+  color:white;
+  border:none;
+  padding:8px;
+  width:90%;
+  margin:10px;
+  cursor:pointer;
+}
+
+/* MOBILE */
+@media(max-width:600px){
+  .products{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .card img{
+    height:140px;
+  }
+
+  header{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .cart{
+    text-align:right;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h2>Luxury Shop</h2>
+
+  <!-- SEARCH -->
+  <div class="search-box">
+    <input type="text" id="search" placeholder="Search for products...">
+    <button onclick="searchProduct()">🔍</button>
+  </div>
+
+  <!-- CART -->
+  <div class="cart" onclick="goToCart()">🛒 Cart (<span id="count">0</span>)</div>
+</header>
+
+<div class="products" id="products"></div>
+
+<script>
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let allProducts = [];
+
+// GO CART
+function goToCart(){
+  window.location.href = "cart.html";
+}
+
+// LOAD PRODUCTS
+async function loadProducts(){
+  let res = await fetch("http://localhost:5000/products");
+  let data = await res.json();
+
+  allProducts = data;
+  showProducts(data);
+}
+
+// SHOW PRODUCTS
+function showProducts(data){
+  let html = "";
+
+  data.forEach(p=>{
+    html += `
+      <div class="card">
+        <img src="http://localhost:5000/uploads/${p.image}">
+        <h3>${p.name}</h3>
+        <p>₹${p.price}</p>
+        <button onclick='addCart(${JSON.stringify(p)})'>Add to Cart</button>
+      </div>
+    `;
+  });
+
+  document.getElementById("products").innerHTML = html;
+}
+
+// SEARCH
+function searchProduct(){
+  let value = document.getElementById("search").value.toLowerCase();
+
+  let filtered = allProducts.filter(p =>
+    p.name.toLowerCase().includes(value)
+  );
+
+  showProducts(filtered);
+}
+
+// ADD CART
+function addCart(product){
+  let found = cart.find(item => item.id === product.id);
+
+  if(found){
+    found.qty = (found.qty || 1) + 1;
+  } else {
+    product.qty = 1;
+    cart.push(product);
+  }
+
+  localStorage.setItem("cart", JSON.stringify(cart));
+  updateCart();
+}
+
+// UPDATE CART
+function updateCart(){
+  document.getElementById("count").innerText =
+    cart.reduce((sum,i)=> sum + (i.qty || 1), 0);
+}
+
+// INIT
+updateCart();
+loadProducts();
+</script>
+
+</body>
+</html>

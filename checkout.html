@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Checkout</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#0f0f0f;
+  color:white;
+  margin:0;
+}
+
+.container{
+  max-width:900px;
+  margin:auto;
+  padding:20px;
+}
+
+h2{
+  text-align:center;
+}
+
+.box{
+  background:#1a1a1a;
+  padding:20px;
+  border-radius:10px;
+  margin-bottom:20px;
+}
+
+.item{
+  display:flex;
+  justify-content:space-between;
+  border-bottom:1px solid #333;
+  padding:10px 0;
+}
+
+.total{
+  font-size:20px;
+  font-weight:bold;
+  margin-top:10px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  border:none;
+  border-radius:5px;
+}
+
+button{
+  padding:12px;
+  width:100%;
+  background:gold;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+  font-size:16px;
+  border-radius:5px;
+}
+
+button:hover{
+  background:orange;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>?? Checkout</h2>
+
+<div class="box">
+  <h3>Order Summary</h3>
+  <div id="items"></div>
+  <div class="total">Total: ?<span id="total">0</span></div>
+</div>
+
+<div class="box">
+  <h3>Delivery Details</h3>
+
+  <input id="name" placeholder="Full Name">
+  <input id="phone" placeholder="Phone">
+  <input id="address" placeholder="Address">
+
+  <button onclick="placeOrder()">Place Order (COD)</button>
+</div>
+
+</div>
+
+<script>
+
+// GET CART
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+// LOAD SUMMARY
+function loadSummary(){
+  let html = "";
+  let total = 0;
+
+  if(cart.length === 0){
+    html = "<p>Cart is empty ??</p>";
+  }
+
+  cart.forEach(item=>{
+    let qty = item.qty || 1;
+    let sub = Number(item.price) * qty;
+    total += sub;
+
+    html += `
+      <div class="item">
+        <div>${item.name} × ${qty}</div>
+        <div>?${sub}</div>
+      </div>
+    `;
+  });
+
+  document.getElementById("items").innerHTML = html;
+  document.getElementById("total").innerText = total;
+}
+
+// PLACE ORDER (BACKEND CONNECTED)
+async function placeOrder(){
+
+  let name = document.getElementById("name").value;
+  let phone = document.getElementById("phone").value;
+  let address = document.getElementById("address").value;
+
+  if(!name || !phone || !address){
+    alert("Fill all details ?");
+    return;
+  }
+
+  let data = {
+    name,
+    phone,
+    address,
+    cart,
+    total: cart.reduce((s,i)=> s + Number(i.price)*(i.qty||1),0)
+  };
+
+  try{
+    let res = await fetch("http://localhost:5000/place-order",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify(data)
+    });
+
+    let text = await res.text();
+
+    alert("Order Placed Successfully ?");
+
+    localStorage.removeItem("cart");
+
+    // redirect to home
+    window.location.href = "index.html";
+
+  }catch(err){
+    alert("Server error ?");
+    console.log(err);
+  }
+}
+
+// INIT
+loadSummary();
+
+</script>
+
+</body>
+</html>

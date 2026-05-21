@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Orders Dashboard</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#111;
+  color:white;
+  padding:20px;
+}
+
+.card{
+  background:#222;
+  padding:10px;
+  margin:10px;
+  border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>All Orders ??</h2>
+
+<div id="orders"></div>
+
+<script>
+async function loadOrders(){
+
+  let res = await fetch("http://localhost:5000/orders");
+  let data = await res.json();
+
+  let html = "";
+
+  data.forEach(order => {
+
+    let cartItems = JSON.parse(order.cart);
+
+    let itemsHTML = "";
+    cartItems.forEach(i => {
+      itemsHTML += `<p>${i.name} - ?${i.price}</p>`;
+    });
+
+    html += `
+      <div class="card">
+        <h3>Name: ${order.name}</h3>
+        <p>Phone: ${order.phone}</p>
+        <p>Address: ${order.address}</p>
+        <hr>
+        ${itemsHTML}
+        <h3>Total: ?${order.total}</h3>
+      </div>
+    `;
+  });
+
+  document.getElementById("orders").innerHTML = html;
+}
+
+loadOrders();
+</script>
+
+</body>
+</html>
